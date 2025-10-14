@@ -5,12 +5,14 @@ cd leafshop-api
 cd cart-order-service
 
 mvn spring-boot:run
+//////////////////////////////////////
 
 git clone https://github.com/sonnguyen181004/leafshop-api.git
 
 cd leafshop-api/cart-order-service
 
 mvn spring-boot:run
+/////////////////////////////////////
 
 
 
