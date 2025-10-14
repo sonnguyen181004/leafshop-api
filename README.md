@@ -1,6 +1,9 @@
 Cách chạy dự án
+cd leafshop-api
 cd cart-order-service
 mvn spring-boot:run
+
+
 
 
 Ứng dụng chạy tại:
