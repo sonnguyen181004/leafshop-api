@@ -1,20 +1,26 @@
 Cách chạy dự án
 
 cd leafshop-api
+
 cd cart-order-service
+
 mvn spring-boot:run
 
 
 
 
 Ứng dụng chạy tại:
+
  http://localhost:8080
 
 Các API chính
 1. Thêm sản phẩm vào giỏ	POST	/api/cart/add	userId, productId, quantity, price	 
-2. Xem giỏ hàng hiện tại	GET	/api/cart	userId hoặc sessionId	 3. Cập nhật số lượng sản phẩm	PUT	/api/cart/update	userId, productId, quantity	
-4. Xóa sản phẩm khỏi giỏ	DELETE	/api/cart/remove	userId, productId	
+2. Xem giỏ hàng hiện tại	GET	/api/cart	userId hoặc sessionId
+3. Cập nhật số lượng sản phẩm	PUT	/api/cart/update	userId, productId, quantity	
+4. Xóa sản phẩm khỏi giỏ	DELETE	/api/cart/remove	userId, productId
+   
 Ví dụ sử dụng (Test bằng Postman)
+
 Thêm sản phẩm vào giỏ
 POST http://localhost:8080/api/cart/add?userId=1&productId=101&quantity=2&price=250000
 
