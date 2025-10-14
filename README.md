@@ -1,10 +1,4 @@
 Cách chạy dự án
-
-cd leafshop-api
-
-cd cart-order-service
-
-mvn spring-boot:run
 //////////////////////////////////////
 
 git clone https://github.com/sonnguyen181004/leafshop-api.git
