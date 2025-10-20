@@ -8,6 +8,8 @@ import lombok.Data;
 public class AddToCartRequest {
     private Long userId;      // Optional
     private String sessionId; // Optional
+    @NotNull(message = "Product name is required")
+private String productName;
 
     @NotNull(message = "Product ID is required")
     private Long productId;

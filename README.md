@@ -1,67 +1,202 @@
+1) Môi trường & cách chạy
+Yêu cầu
 
+Java 17+ (hoặc bản tương thích với project)
 
-git clone https://github.com/sonnguyen181004/leafshop-api.git
+Maven
 
-cd leafshop-api/cart-order-service
+CSDL: mặc định project dùng H2 (embedded) hoặc DB bạn cấu hình (MySQL/Postgres) — kiểm tra application.properties / application.yml
 
+IDE (IntelliJ/NetBeans) hoặc terminal
+
+Start app
+
+Từ thư mục project:
+
+mvn clean install
 mvn spring-boot:run
 
 
+Hoặc chạy class Main có @SpringBootApplication trong IDE.
+
+Kiểm tra server chạy:
+
+GET http://localhost:8080/hello
 
 
-Ứng dụng chạy tại:
+=> trả về Hello Leaf Shop! 
 
- http://localhost:8080
+2) Kiến trúc ngắn gọn / packages chính
 
-Các API chính
-1. Thêm sản phẩm vào giỏ	POST	/api/cart/add	userId, productId, quantity, price	 
-2. Xem giỏ hàng hiện tại	GET	/api/cart	userId hoặc sessionId
-3. Cập nhật số lượng sản phẩm	PUT	/api/cart/update	userId, productId, quantity	
-4. Xóa sản phẩm khỏi giỏ	DELETE	/api/cart/remove	userId, productId
-   
-Ví dụ sử dụng (Test bằng Postman)
+com.leafshop.cart.* — Cart module
 
-Thêm sản phẩm vào giỏ
-POST http://localhost:8080/api/cart/add?userId=1&productId=101&quantity=2&price=250000
+Controller: CartController
+
+Service: CartService, CartServiceImpl
+
+Entity: Cart, CartItem
+
+Repository: CartRepository, CartItemRepository
+
+com.leafshop.order.* — Order module
+
+Controller: OrderController
+
+Service: OrderService, OrderServiceImpl
+
+Entity: Order, OrderItem
+
+Repository: OrderRepository, OrderItemRepository
+
+(Optional) com.leafshop.exception.GlobalExceptionHandler — xử lý lỗi trả JSON gọn
+
+3) Danh sách endpoint (tóm tắt)
+Cart
+
+GET /api/cart?userId={userId} — Lấy giỏ theo userId (hoặc sessionId)
+
+POST /api/cart/add — Thêm sản phẩm vào giỏ (JSON body)
+
+PUT /api/cart/update — Cập nhật số lượng (JSON body)
+
+DELETE /api/cart/remove — Xóa sản phẩm (JSON body)
+
+GET /api/cart/total?userId={userId} — Tính tổng (subtotal, shippingFee, discount, grandTotal)
+
+POST /api/cart/checkout?userId={userId} — Checkout (trả order summary & clear cart)
+
+Order
+
+POST /api/orders/create — Tạo order từ cart (body: { "userId": 1 } hoặc DTO)
+
+GET /api/orders/history/{userId} — Lấy lịch sử đơn hàng user
+
+GET /api/orders/{orderId} — Lấy chi tiết đơn hàng
+
+PUT /api/orders/{orderId}/status — Cập nhật trạng thái đơn (body { "status": "..." })
+
+PUT /api/orders/{orderId}/payment — Cập nhật trạng thái thanh toán (body { "paymentStatus": "..." })
+
+PUT /api/orders/{orderId}/assign/{staffId} — Gán đơn cho nhân viên
+
+POST /api/orders/{orderId}/return — Xử lý return (đổi/trả)
+
+4) Test tuần tự (end-to-end) — bước từng bước
+
+Trước khi bắt đầu: đảm bảo server đang chạy và port đúng (mặc định 8080).
+
+A. Kiểm tra server
+GET http://localhost:8080/hello
 
 
-Kết quả:
+Expected: Hello Leaf Shop! 
 
+B. Test module Cart — tuần tự
+1) Add item vào cart
+
+Request
+
+POST http://localhost:8080/api/cart/add
+Content-Type: application/json
+Body:
 {
   "userId": 1,
-  "totalPrice": 500000.0,
-  "items": [
-    { "productId": 101, "quantity": 2, "price": 250000.0 }
-  ]
+  "sessionId": null,
+  "productId": 101,
+  "productName": "Áo thun trắng",
+  "quantity": 2,
+  "price": 150000
 }
 
-Xem giỏ hàng
+
+Expected response (200) — ví dụ:
+
+{
+  "success": true,
+  "message": "Item added to cart",
+  "data": {
+    "id": 1,
+    "userId": 1,
+    "sessionId": null,
+    "totalPrice": 300000.0,
+    "items": [
+      { "id": 3, "productId": 101, "productName": "Áo thun trắng", "quantity": 2, "price": 150000.0 }
+    ]
+  }
+}
+
+2) Lấy giỏ hàng
 GET http://localhost:8080/api/cart?userId=1
 
 
-→ Hiển thị toàn bộ sản phẩm trong giỏ của user 1.
+Expected: data.items chứa sản phẩm đã thêm; totalPrice = quantity × price.
 
- Cập nhật số lượng sản phẩm
-PUT http://localhost:8080/api/cart/update?userId=1&productId=101&quantity=3
-
-
-→ Cập nhật lại số lượng, tổng tiền thay đổi theo.
-
- Xóa sản phẩm khỏi giỏ
-DELETE http://localhost:8080/api/cart/remove?userId=1&productId=101
+3) Cập nhật số lượng
+PUT http://localhost:8080/api/cart/update
+Content-Type: application/json
+Body:
+{ "userId":1, "sessionId":null, "productId":101, "quantity":3 }
 
 
-→ Xóa sản phẩm ra khỏi giỏ hàng.
+Expected: quantity cập nhật, totalPrice thay đổi.
 
-Ví dụ nhiều người dùng
-Người dùng	API gọi	Kết quả tổng
-User 1	/api/cart/add?userId=1&productId=101&quantity=2&price=250000	totalPrice = 500000
-User 2	/api/cart/add?userId=2&productId=202&quantity=1&price=300000	totalPrice = 300000
+4) Tính tổng
+GET http://localhost:8080/api/cart/total?userId=1
 
- Mỗi người có giỏ hàng riêng biệt.
 
-Khách chưa đăng nhập
+Expected: trả { subtotal, shippingFee, discount, grandTotal } theo logic:
 
-Có thể dùng sessionId thay userId:
+shippingFee = 0 nếu subtotal >= 500000, else 30000
 
-POST http://localhost:8080/api/cart/add?sessionId=ABC123&productId=303&quantity=1&price=200000
+discount = 0 (tạm thời)
+
+5) Checkout (chuyển cart → order và clear cart)
+
+Trước checkout: đảm bảo cart có item(s).
+
+POST http://localhost:8080/api/cart/checkout?userId=1
+
+
+Expected: JSON orderSummary gồm orderId, subtotal, shippingFee, discount, grandTotal, itemCount.
+Sau checkout, gọi GET /api/cart?userId=1 → items phải rỗng và totalPrice = 0.0.
+
+C. Test module Order — tuần tự
+1) Tạo order từ cart (thực tế OrderServiceImpl tạo order dựa trên CartService.getCart)
+
+Request (nếu bạn đã checkout ở bước trên thì cart đã rỗng; trong flow bình thường bạn tạo order bằng /api/orders/create thay vì /api/cart/checkout nếu muốn)
+
+POST http://localhost:8080/api/orders/create
+Content-Type: application/json
+Body:
+{ "userId": 1 }
+
+
+Expected: OrderResponse (id, userId, totalAmount, status=PENDING, paymentStatus=UNPAID, items[]).
+
+Lưu ý: nếu cart trống thì API trả lỗi Cart is empty! (tốt nhất xử lý bằng GlobalExceptionHandler thành 400).
+
+2) Lấy lịch sử đơn hàng
+GET http://localhost:8080/api/orders/history/1
+
+
+Expected: array chứa order(s).
+
+3) Lấy chi tiết đơn hàng
+GET http://localhost:8080/api/orders/{orderId}
+
+4) Cập nhật trạng thái đơn
+PUT http://localhost:8080/api/orders/{orderId}/status
+Body: { "status": "SHIPPED" }
+
+5) Cập nhật trạng thái thanh toán
+PUT http://localhost:8080/api/orders/{orderId}/payment
+Body: { "paymentStatus": "PAID" }
+
+6) Gán nhân viên
+PUT http://localhost:8080/api/orders/{orderId}/assign/10
+
+7) Xử lý return (đổi/trả)
+POST http://localhost:8080/api/orders/{orderId}/return
+
+
+Expected: order.status = RETURNED và nếu bạn có logic tồn kho/hoàn tiền, các bước đó cũng được kích hoạt.

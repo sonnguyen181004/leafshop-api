@@ -41,8 +41,14 @@ public class CartController {
     // ✅ Thêm sản phẩm vào giỏ
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<Cart>> addItem(@Valid @RequestBody AddToCartRequest request) {
-        Cart cart = cartService.addItem(request.getUserId(), request.getSessionId(),
-                request.getProductId(), request.getQuantity(), request.getPrice());
+        Cart cart = cartService.addItem(
+                request.getUserId(),
+                request.getSessionId(),
+                request.getProductId(),
+                request.getProductName(),  // ✅ bổ sung dòng này
+                request.getQuantity(),
+                request.getPrice()
+        );
 
         return ResponseEntity.ok(new ApiResponse<>(true, "Item added to cart", cart));
     }
@@ -50,8 +56,12 @@ public class CartController {
     // ✅ Cập nhật số lượng sản phẩm
     @PutMapping("/update")
     public ResponseEntity<ApiResponse<Cart>> updateItem(@Valid @RequestBody UpdateCartItemRequest request) {
-        Cart cart = cartService.updateItem(request.getUserId(), request.getSessionId(),
-                request.getProductId(), request.getQuantity());
+        Cart cart = cartService.updateItem(
+                request.getUserId(),
+                request.getSessionId(),
+                request.getProductId(),
+                request.getQuantity()
+        );
 
         return ResponseEntity.ok(new ApiResponse<>(true, "Cart item updated", cart));
     }
@@ -59,11 +69,15 @@ public class CartController {
     // ✅ Xóa sản phẩm khỏi giỏ
     @DeleteMapping("/remove")
     public ResponseEntity<ApiResponse<Cart>> removeItem(@Valid @RequestBody RemoveCartItemRequest request) {
-        Cart cart = cartService.removeItem(request.getUserId(), request.getSessionId(), request.getProductId());
+        Cart cart = cartService.removeItem(
+                request.getUserId(),
+                request.getSessionId(),
+                request.getProductId()
+        );
         return ResponseEntity.ok(new ApiResponse<>(true, "Item removed from cart", cart));
     }
 
-    // ✅ API tính tổng tiền giỏ hàng (subtotal + phí ship + giảm giá)
+    // ✅ API tính tổng tiền
     @GetMapping("/total")
     public ResponseEntity<ApiResponse<Map<String, Double>>> getCartTotal(
             @RequestParam(required = false) Long userId,
@@ -76,8 +90,8 @@ public class CartController {
 
         Cart cart = cartService.getCart(userId, sessionId);
         double subtotal = cartService.calculateTotal(cart);
-        double shippingFee = (subtotal >= 500000) ? 0 : 30000; // miễn phí ship nếu >= 500k
-        double discount = 0; // sau này thêm logic mã giảm giá
+        double shippingFee = (subtotal >= 500000) ? 0 : 30000;
+        double discount = 0;
         double grandTotal = subtotal + shippingFee - discount;
 
         Map<String, Double> totals = Map.of(
@@ -90,7 +104,7 @@ public class CartController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cart total calculated successfully", totals));
     }
 
-    // ✅ API checkout (chuyển giỏ hàng thành đơn hàng - bản demo)
+    // ✅ API checkout
     @PostMapping("/checkout")
     public ResponseEntity<ApiResponse<Map<String, Object>>> checkout(
             @RequestParam(required = false) Long userId,
@@ -121,10 +135,8 @@ public class CartController {
                 "itemCount", cart.getItems().size()
         );
 
-        // ✅ Dọn giỏ hàng sau khi checkout (chưa có Order entity nên chỉ reset tạm)
-        cart.getItems().clear();
-        cart.setTotalPrice(0.0);
-        cartService.getCart(userId, sessionId); // đảm bảo cập nhật DB
+        // ✅ Dọn giỏ hàng sau khi checkout
+        cartService.clearCart(cart.getId());
 
         return ResponseEntity.ok(new ApiResponse<>(true, "Checkout successful", orderSummary));
     }
