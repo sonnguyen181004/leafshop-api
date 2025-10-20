@@ -20,23 +20,30 @@ public class Order {
     private Long id;
 
     @Column(name = "user_id")
-    private Long userId;
+    private Long userId; // Có thể null nếu checkout guest
 
-    @Column(name = "total_amount")
-    private Double totalAmount;
+    @Builder.Default
+    @Column(name = "total_amount", nullable = false)
+    private Double totalAmount = 0.0;
 
-    private String status; // PENDING, CONFIRMED, SHIPPED, COMPLETED, CANCELLED, RETURNED
+    @Builder.Default
+    @Column(length = 50, nullable = false)
+    private String status = "PENDING"; // PENDING, CONFIRMED, SHIPPED...
 
-    @Column(name = "payment_status")
-    private String paymentStatus; // UNPAID, PAID, REFUNDED
+    @Builder.Default
+    @Column(name = "payment_status", length = 50, nullable = false)
+    private String paymentStatus = "UNPAID"; // UNPAID, PAID, REFUNDED
 
     @Column(name = "assigned_staff_id")
     private Long assignedStaffId;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 

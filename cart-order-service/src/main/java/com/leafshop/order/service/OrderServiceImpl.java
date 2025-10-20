@@ -41,7 +41,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItem> orderItems = cart.getItems().stream()
                 .map((CartItem ci) -> OrderItem.builder()
                         .productId(ci.getProductId())
-                        .productName(ci.getProductName()) // ✅ Thêm dòng này
+                        .productName(ci.getProductName()) 
                         .quantity(ci.getQuantity())
                         .price(ci.getPrice())
                         .order(order)
@@ -122,7 +122,7 @@ public class OrderServiceImpl implements OrderService {
                         order.getItems().stream()
                                 .map(oi -> OrderResponse.ItemResponse.builder()
                                         .productId(oi.getProductId())
-                                        .productName(oi.getProductName()) // ✅ Thêm dòng này
+                                        .productName(oi.getProductName()) 
                                         .quantity(oi.getQuantity())
                                         .price(oi.getPrice())
                                         .build())

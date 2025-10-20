@@ -3,7 +3,6 @@ package com.leafshop.cart.entity;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,16 +30,17 @@ public class Cart {
     @Column(length = 100)
     private String sessionId;
 
-    @Column(nullable = false)
+    // Xóa precision/scale vì Double không hỗ trợ
     @Builder.Default
+    @Column(nullable = false)
     private Double totalPrice = 0.0;
 
+    @Builder.Default
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
-    @Builder.Default
     private List<CartItem> items = new ArrayList<>();
 
-    //  Logic kiểm tra: phải có userId hoặc sessionId, nhưng không được thiếu cả 2 hoặc có cả 2
+    // Logic kiểm tra: phải có userId hoặc sessionId (chỉ 1 trong 2)
     @PrePersist
     @PreUpdate
     private void validateCartOwner() {

@@ -6,7 +6,7 @@ public interface CartService {
 
     Cart getCart(Long userId, String sessionId);
 
-    // ✅ Đổi int → Integer, double → Double
+    //  Đổi int → Integer, double → Double
     Cart addItem(Long userId, String sessionId, Long productId, String productName, Integer quantity, Double price);
 
     Cart updateItem(Long userId, String sessionId, Long productId, Integer quantity);

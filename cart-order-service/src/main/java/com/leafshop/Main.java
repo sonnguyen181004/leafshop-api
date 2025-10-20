@@ -11,11 +11,11 @@ public class Main {
 
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);
-        System.out.println("🚀 Leaf Shop Cart Service is running!");
+        System.out.println(" Leaf Shop Cart Service is running!");
     }
 
     @GetMapping("/hello")
     public String hello() {
-        return "Hello Leaf Shop! 🌿";
+        return "Hello Leaf Shop! ";
     }
 }
