@@ -1,11 +1,14 @@
 package com.leafshop.service;
 
-import com.leafshop.entity.*;
-import com.leafshop.repository.*;
+import com.leafshop.entity.Cart;
+import com.leafshop.entity.CartItem;
+import com.leafshop.repository.CartItemRepository;
+import com.leafshop.repository.CartRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-
 @Service
+@Transactional
 public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
@@ -24,47 +27,66 @@ public class CartServiceImpl implements CartService {
     }
 
     private Cart createCart(Long userId, String sessionId) {
-        Cart cart = new Cart();
-        cart.setUserId(userId);
-        cart.setSessionId(sessionId);
-        cart.setTotalPrice(0.0);
+        Cart cart = Cart.builder()
+                .userId(userId)
+                .sessionId(sessionId)
+                .totalPrice(0.0)
+                .build();
         return cartRepository.save(cart);
     }
 
     @Override
-    public Cart addItem(Long userId, String sessionId, Long productId, int quantity, double price) {
-        Cart cart = getCart(userId, sessionId);
-        CartItem item = new CartItem();
-        item.setProductId(productId);
-        item.setQuantity(quantity);
-        item.setPrice(price);
-        item.setCart(cart);
-        itemRepository.save(item);
-        return calculateAndSave(cart);
+public Cart addItem(Long userId, String sessionId, Long productId, int quantity, double price) {
+    Cart cart = getCart(userId, sessionId);
+
+    CartItem existingItem = itemRepository.findByCartIdAndProductId(cart.getId(), productId)
+            .orElse(null);
+
+    if (existingItem != null) {
+        existingItem.setQuantity(existingItem.getQuantity() + quantity);
+    } else {
+        CartItem newItem = CartItem.builder()
+                .cart(cart)
+                .productId(productId)
+                .quantity(quantity)
+                .price(price)
+                .build();
+
+        
+        cart.getItems().add(newItem);
     }
+
+    return calculateAndSave(cart);
+}
 
     @Override
     public Cart updateItem(Long userId, String sessionId, Long productId, int quantity) {
         Cart cart = getCart(userId, sessionId);
-        for (CartItem item : cart.getItems()) {
-            if (item.getProductId().equals(productId)) {
-                item.setQuantity(quantity);
-                itemRepository.save(item);
-            }
-        }
+
+        CartItem item = itemRepository.findByCartIdAndProductId(cart.getId(), productId)
+                .orElseThrow(() -> new RuntimeException("Item not found in cart"));
+
+        item.setQuantity(quantity);
+        itemRepository.save(item);
+
         return calculateAndSave(cart);
     }
 
     @Override
     public Cart removeItem(Long userId, String sessionId, Long productId) {
         Cart cart = getCart(userId, sessionId);
-        cart.getItems().removeIf(i -> i.getProductId().equals(productId));
+
+        CartItem item = itemRepository.findByCartIdAndProductId(cart.getId(), productId)
+                .orElseThrow(() -> new RuntimeException("Item not found in cart"));
+
+        itemRepository.delete(item);
+
         return calculateAndSave(cart);
     }
 
     @Override
     public double calculateTotal(Cart cart) {
-        return cart.getItems().stream()
+        return itemRepository.findByCartId(cart.getId()).stream()
                 .mapToDouble(i -> i.getPrice() * i.getQuantity())
                 .sum();
     }

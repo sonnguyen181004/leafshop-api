@@ -1,37 +1,52 @@
 package com.leafshop.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "carts",
+        indexes = {
+                @Index(name = "idx_cart_user", columnList = "userId"),
+                @Index(name = "idx_cart_session", columnList = "sessionId")
+        })
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Cart {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Nếu user đã login
     private Long userId;
+
+    // Nếu khách chưa login thì dùng sessionId
+    @Column(length = 100)
     private String sessionId;
-    private double totalPrice;
 
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CartItem> items = new ArrayList<>(); // 👈 THÊM DÒNG NÀY
+    @Column(nullable = false)
+    @Builder.Default
+    private Double totalPrice = 0.0;
 
-    public Cart() {}
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    @Builder.Default
+    private List<CartItem> items = new ArrayList<>();
 
-    // Getters và setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-
-    public String getSessionId() { return sessionId; }
-    public void setSessionId(String sessionId) { this.sessionId = sessionId; }
-
-    public double getTotalPrice() { return totalPrice; }
-    public void setTotalPrice(double totalPrice) { this.totalPrice = totalPrice; }
-
-    public List<CartItem> getItems() { return items; }
-    public void setItems(List<CartItem> items) { this.items = items; }
+    //  Logic kiểm tra: phải có userId hoặc sessionId, nhưng không được thiếu cả 2 hoặc có cả 2
+    @PrePersist
+    @PreUpdate
+    private void validateCartOwner() {
+        if ((userId == null && (sessionId == null || sessionId.isEmpty()))
+                || (userId != null && sessionId != null)) {
+            throw new IllegalArgumentException("Cart must have either userId OR sessionId (only one allowed).");
+        }
+    }
 }

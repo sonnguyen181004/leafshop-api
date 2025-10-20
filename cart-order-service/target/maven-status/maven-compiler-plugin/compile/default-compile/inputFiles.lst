@@ -1,5 +1,9 @@
 C:\Users\LOQ\Downloads\API\cart-order-service\src\main\java\com\leafshop\controller\CartController.java
 C:\Users\LOQ\Downloads\API\cart-order-service\src\main\java\com\leafshop\controller\HomeController.java
+C:\Users\LOQ\Downloads\API\cart-order-service\src\main\java\com\leafshop\dto\AddToCartRequest.java
+C:\Users\LOQ\Downloads\API\cart-order-service\src\main\java\com\leafshop\dto\ApiResponse.java
+C:\Users\LOQ\Downloads\API\cart-order-service\src\main\java\com\leafshop\dto\RemoveCartItemRequest.java
+C:\Users\LOQ\Downloads\API\cart-order-service\src\main\java\com\leafshop\dto\UpdateCartItemRequest.java
 C:\Users\LOQ\Downloads\API\cart-order-service\src\main\java\com\leafshop\entity\Cart.java
 C:\Users\LOQ\Downloads\API\cart-order-service\src\main\java\com\leafshop\entity\CartItem.java
 C:\Users\LOQ\Downloads\API\cart-order-service\src\main\java\com\leafshop\Main.java

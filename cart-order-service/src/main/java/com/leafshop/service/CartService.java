@@ -1,7 +1,7 @@
 package com.leafshop.service;
 
 import com.leafshop.entity.Cart;
-import com.leafshop.entity.CartItem;
+
 
 
 public interface CartService {
