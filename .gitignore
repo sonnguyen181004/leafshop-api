@@ -1,0 +1,35 @@
+# ====================================
+# 🌿 LeafShop API - Spring Boot Ignore
+# ====================================
+
+# Maven build output
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+*.out
+
+# IDE & editor settings
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.jar
+*.war
+
+# Temporary files
+tmp/
+*.tmp
+
+# Environment & config
+.env
+application-local.properties
