@@ -186,7 +186,7 @@ GET http://localhost:8080/api/orders/{orderId}
 
 4) Cập nhật trạng thái đơn
 PUT http://localhost:8080/api/orders/{orderId}/status
-Body: { "status": "SHIPPED" }
+
 
 5) Cập nhật trạng thái thanh toán
 PUT http://localhost:8080/api/orders/{orderId}/payment
@@ -200,3 +200,64 @@ POST http://localhost:8080/api/orders/{orderId}/return
 
 
 Expected: order.status = RETURNED và nếu bạn có logic tồn kho/hoàn tiền, các bước đó cũng được kích hoạt.
+Coupon Module (theo code bạn vừa gửi)
+Method	Endpoint	Mô tả
+POST	/api/coupons	Tạo mới coupon
+PUT	/api/coupons/{id}	Cập nhật coupon
+DELETE	/api/coupons/{id}	Xóa coupon
+GET	/api/coupons	Lấy danh sách coupon
+GET	/api/coupons/{code}	Lấy thông tin coupon theo mã
+POST	/api/coupons/apply	Áp dụng coupon cho giỏ hàng/đơn hàng
+ạo coupon
+
+POST /api/coupons
+Content-Type: application/json
+{
+  "code": "SALE20",
+  "discountType": "PERCENT",
+  "discountValue": 20,
+  "minOrderValue": 100000,
+  "expiryDate": "2025-12-31"
+}
+
+
+2️ Lấy danh sách coupon
+
+GET /api/coupons
+
+
+3️ Lấy chi tiết coupon theo mã
+
+GET /api/coupons/SALE20
+
+
+4 Áp dụng coupon
+
+POST /api/coupons/apply
+Content-Type: application/json
+{
+  "userId": 1,
+  "couponCode": "SALE20",
+  "cartTotal": 300000
+}
+
+
+Expected:
+
+{
+  "discountAmount": 60000.0,
+  "finalTotal": 240000.0
+}
+
+
+5Cập nhật coupon
+
+PUT /api/coupons/1
+{
+  "discountValue": 25
+}
+
+
+6️⃣ Xóa coupon
+
+DELETE /api/coupons/1

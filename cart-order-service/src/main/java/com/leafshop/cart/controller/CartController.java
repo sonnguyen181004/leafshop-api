@@ -6,7 +6,11 @@ import com.leafshop.cart.dto.RemoveCartItemRequest;
 import com.leafshop.cart.dto.ApiResponse;
 import com.leafshop.cart.entity.Cart;
 import com.leafshop.cart.service.CartService;
+import com.leafshop.order.dto.CreateOrderRequest;
+import com.leafshop.order.dto.OrderResponse;
+import com.leafshop.order.service.OrderService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,15 +19,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/cart")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class CartController {
 
     private final CartService cartService;
+    private final OrderService orderService;
 
-    public CartController(CartService cartService) {
-        this.cartService = cartService;
-    }
-
-    // ✅ Lấy giỏ hàng theo userId hoặc sessionId
+    // ✅ Lấy giỏ hàng
     @GetMapping
     public ResponseEntity<ApiResponse<Cart>> getCart(
             @RequestParam(required = false) Long userId,
@@ -45,11 +47,10 @@ public class CartController {
                 request.getUserId(),
                 request.getSessionId(),
                 request.getProductId(),
-                request.getProductName(),  // ✅ bổ sung dòng này
+                request.getProductName(),
                 request.getQuantity(),
                 request.getPrice()
         );
-
         return ResponseEntity.ok(new ApiResponse<>(true, "Item added to cart", cart));
     }
 
@@ -62,7 +63,6 @@ public class CartController {
                 request.getProductId(),
                 request.getQuantity()
         );
-
         return ResponseEntity.ok(new ApiResponse<>(true, "Cart item updated", cart));
     }
 
@@ -104,9 +104,9 @@ public class CartController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cart total calculated successfully", totals));
     }
 
-    // ✅ API checkout
+    // ✅ FIX: Checkout thật (tạo Order, xóa giỏ hàng)
     @PostMapping("/checkout")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> checkout(
+    public ResponseEntity<ApiResponse<OrderResponse>> checkout(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String sessionId) {
 
@@ -116,28 +116,18 @@ public class CartController {
         }
 
         Cart cart = cartService.getCart(userId, sessionId);
-        if (cart.getItems().isEmpty()) {
+        if (cart == null || cart.getItems().isEmpty()) {
             return ResponseEntity.badRequest().body(
                     new ApiResponse<>(false, "Cart is empty", null));
         }
 
-        double subtotal = cartService.calculateTotal(cart);
-        double shippingFee = (subtotal >= 500000) ? 0 : 30000;
-        double discount = 0;
-        double grandTotal = subtotal + shippingFee - discount;
+        // ✅ Tạo đơn hàng từ giỏ hàng
+        CreateOrderRequest orderRequest = new CreateOrderRequest();
+        orderRequest.setUserId(userId);
+        orderRequest.setSessionId(sessionId);
 
-        Map<String, Object> orderSummary = Map.of(
-                "orderId", "TEMP-" + System.currentTimeMillis(),
-                "subtotal", subtotal,
-                "shippingFee", shippingFee,
-                "discount", discount,
-                "grandTotal", grandTotal,
-                "itemCount", cart.getItems().size()
-        );
+        OrderResponse order = orderService.createOrderFromCart(orderRequest);
 
-        // ✅ Dọn giỏ hàng sau khi checkout
-        cartService.clearCart(cart.getId());
-
-        return ResponseEntity.ok(new ApiResponse<>(true, "Checkout successful", orderSummary));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Checkout successful, order created", order));
     }
 }
