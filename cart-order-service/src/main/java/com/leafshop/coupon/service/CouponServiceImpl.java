@@ -3,8 +3,8 @@ package com.leafshop.coupon.service;
 import com.leafshop.coupon.dto.*;
 import com.leafshop.coupon.entity.*;
 import com.leafshop.coupon.repository.*;
-import com.leafshop.order.entity.Order; // ✅ thêm import này
-import com.leafshop.order.repository.OrderRepository; // ✅ thêm import này
+import com.leafshop.order.entity.Order; //  thêm import này
+import com.leafshop.order.repository.OrderRepository; //  thêm import này
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ public class CouponServiceImpl implements CouponService {
 
     private final CouponRepository couponRepository;
     private final OrderCouponRepository orderCouponRepository;
-    private final OrderRepository orderRepository; // ✅ thêm dependency để truy cập order
+    private final OrderRepository orderRepository; //  thêm dependency để truy cập order
 
     @Override
     public CouponResponse createCoupon(CouponRequest req) {
@@ -89,13 +89,13 @@ public Double applyCoupon(ApplyCouponRequest request) {
         throw new RuntimeException("Coupon expired, inactive or usage limit exceeded");
     }
 
-    // ✅ Lấy order từ DB để cập nhật lại totalAmount
+    //  Lấy order từ DB để cập nhật lại totalAmount
     Order order = orderRepository.findById(request.getOrderId())
             .orElseThrow(() -> new RuntimeException("Order not found"));
 
     double orderTotal = order.getTotalAmount();
 
-    // ✅ Tính discount theo loại mã
+    //  Tính discount theo loại mã
     double discount = switch (coupon.getType().toUpperCase()) {
         case "PERCENTAGE" -> orderTotal * (coupon.getDiscountValue() / 100);
         case "FIXED" -> coupon.getDiscountValue();
@@ -103,16 +103,16 @@ public Double applyCoupon(ApplyCouponRequest request) {
         default -> throw new RuntimeException("Unsupported coupon type");
     };
 
-    // ✅ Cập nhật lại totalAmount (không âm)
+    //  Cập nhật lại totalAmount (không âm)
     double newTotal = Math.max(orderTotal - discount, 0);
     order.setTotalAmount(newTotal);
     orderRepository.save(order);
 
-    // ✅ Tăng lượt sử dụng
+    //  Tăng lượt sử dụng
     coupon.incrementUsage();
     couponRepository.save(coupon);
 
-    // ✅ Ghi nhận coupon áp dụng cho đơn hàng
+    //  Ghi nhận coupon áp dụng cho đơn hàng
     orderCouponRepository.save(OrderCoupon.builder()
             .orderId(order.getId())
             .coupon(coupon)
@@ -122,7 +122,7 @@ public Double applyCoupon(ApplyCouponRequest request) {
     return discount;
 }
 
-    /** ✅ Validate date logic **/
+    /**  Validate date logic **/
     private void validateDate(LocalDate startDate, LocalDate endDate) {
         LocalDate now = LocalDate.now();
 
@@ -137,7 +137,7 @@ public Double applyCoupon(ApplyCouponRequest request) {
         }
     }
 
-    /** ✅ Convert Entity to DTO **/
+    /**  Convert Entity to DTO **/
     private CouponResponse mapToResponse(Coupon c) {
         return CouponResponse.builder()
                 .id(c.getId())

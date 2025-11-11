@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class CreateOrderRequest {
     private Long userId;
-    private String sessionId; // ✅ thêm dòng này
+    private String sessionId; 
 }
